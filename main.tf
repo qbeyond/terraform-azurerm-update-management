@@ -1,10 +1,8 @@
 /**
- * Add a Short description of this module
+ * Based on the defined severity groups this module deploys the update management configuration
  *
  * 
  */
-
-##### Subscrition anlage
 
 #This is due to an Azure specifica, that with 1 day of, the time generated is today.
 resource "time_offset" "tomorrow" {
