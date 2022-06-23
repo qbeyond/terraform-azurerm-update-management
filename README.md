@@ -4,17 +4,19 @@
 
 ----
 <!-- BEGIN_TF_DOCS -->
-Add a Short description of this module
+Based on the defined severity groups this module deploys the update management configuration
 
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.7.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 3.7.0 |
 | <a name="provider_time"></a> [time](#provider\_time) | n/a |
 
 ## Modules
