@@ -1,5 +1,5 @@
 module "severity-severity-01-third-sunday-2200-reboot" {
-  source                                                      = "azurerm/update-policies"
+  source                                                      = "qbeyond/update-management/azurerm"
   version                                                     = "1.0.0"
   resource_group_name                                         = local.resource_group_name_automation_account
   automation_account_name                                     = local.automation_account_name
