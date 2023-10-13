@@ -4,7 +4,7 @@
 
 ----
 <!-- BEGIN_TF_DOCS -->
-Based on the defined severity groups this module deploys the update management configuration
+This Module automatically creates update deployment groups in azure automation.
 
 ## Requirements
 
