@@ -13,21 +13,21 @@ resource "time_static" "schedule_start_tomorrow_7am" {
   }
 }
 
-resource "azurerm_automation_schedule" "every_12h_7am" {
-  name                    = "Every 12 Hours 7AM"
-  resource_group_name     = var.automation_account.resource_group_name
-  automation_account_name = var.automation_account.name
-  frequency               = time_static.tomorrow_7am.triggers.frequency
-  interval                = time_static.tomorrow_7am.triggers.interval
-  timezone                = time_static.tomorrow_7am.triggers.timezone
-  start_time              = time_static.tomorrow_7am.rfc3339
+resource "azurerm_automation_schedule" "every_12h_starting_7am" {
+  name                    = "Every 12 Hours starting 7AM"
+  resource_group_name     = time_static.schedule_start_tomorrow_7am.triggers.rg_name
+  automation_account_name = time_static.schedule_start_tomorrow_7am.triggers.aac_name
+  frequency               = time_static.schedule_start_tomorrow_7am.triggers.frequency
+  interval                = time_static.schedule_start_tomorrow_7am.triggers.interval
+  timezone                = time_static.schedule_start_tomorrow_7am.triggers.timezone
+  start_time              = time_static.schedule_start_tomorrow_7am.rfc3339
   description             = "This schedule runs every twelve hours staring 7 AM."
 }
 
 resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
   resource_group_name     = var.automation_account.resource_group_name
   automation_account_name = var.automation_account.name
-  schedule_name           = azurerm_automation_schedule.every_12h_7am.name
+  schedule_name           = azurerm_automation_schedule.every_12h_starting_7am.name
   runbook_name            = azurerm_automation_runbook.set_deployment_schedules.name
 
   parameters = {
