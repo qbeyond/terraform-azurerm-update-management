@@ -99,7 +99,7 @@ Write-Output "Following severity group tags were found $severityGroups"
 Set-AzContext -Subscription $managementSubscriptionId 
 
 Write-Output "Starting creating/ updating severity groups."
-$syntaxRegex = '(0[1-9]|[1-9][0-9])-(first|second|third|forth|last)-(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]\d|2[0-3])([0-5]\d)-([XCSUFEDTG]+)-(reboot|neverreboot|alwaysreboot|onlyreboot)'
+$syntaxRegex = '^(0[1-9]|[1-9][0-9])-(first|second|third|forth|last)-(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]\d|2[0-3])([0-5]\d)-([XCSUFEDTG]+)-(reboot|neverreboot|alwaysreboot|onlyreboot)$'
 
 foreach ($severityGroup in $severityGroups) {
     $splitSeverityGroup = $severityGroup -split "-"
