@@ -4,7 +4,7 @@
 
 ----
 <!-- BEGIN_TF_DOCS -->
-This Module automatically creates update deployment groups in azure automation.
+This Module creates an azure runbook that automatically creates and updates update deployment groups in azure automation. The created deployment groups include every virtual machine under the management group "alz" that has the severity group monthly tag with the correct syntax. The runbook runs every 12 hours starting 7am UTC+2 the next day.
 
 ## Requirements
 
