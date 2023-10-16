@@ -19,3 +19,17 @@ variable "management_group_id" {
   description = "ID of the management group that scopes the update management."
   default     = "alz"
 }
+
+variable "az_resourcegraph_module" {
+  type = object({
+    name = string
+    module_link = list(object({
+      uri = string
+    }))
+  })
+  description = "Required module Az.resourcegraph that is needed to run queries in the runbook."
+  validation {
+    condition =  endswith(var.az_resourcegraph_module.module_link[0].uri, "az.resourcegraph.0.13.0.nupkg")
+    error_message = "az.resourcegraph in version 0.13.0 is required"
+  }
+}
