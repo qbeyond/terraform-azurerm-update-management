@@ -3,8 +3,17 @@
 [![License](https://img.shields.io/github/license/qbeyond/terraform-module-template.svg)](https://github.com/qbeyond/terraform-module-template/blob/main/LICENSE)
 
 ----
-<!-- BEGIN_TF_DOCS -->
+## Description 
 This Module creates an azure runbook that automatically creates and updates update deployment groups in azure automation. The created deployment groups include every virtual machine under the management group "alz" that has the severity group monthly tag with the correct syntax. The runbook runs every 12 hours starting 7am UTC+2 the next day.
+
+## Requirements
+- Powershell module az.resourcegraph in version 0.13.0 installed in the automation account
+- System Managed Identity of the automation account with following permissions:
+    - Reader on the scope of the specified management group (default alz)
+    - Virtual machine contributor on the scope of the specified management group (default alz)
+    - Automation contributor on the specified automation account 
+
+<!-- BEGIN_TF_DOCS -->
 
 ## Requirements
 
