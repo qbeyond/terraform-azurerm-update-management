@@ -8,6 +8,7 @@ This Module creates an azure runbook that automatically creates and updates upda
 
 ## Requirements
 - Powershell module az.resourcegraph in version 0.13.0 installed in the automation account
+- Powershell module az.accounts in version 2.12.1 installed in automation account. Higher versions are not supported by az.resourcegraph
 - System Managed Identity of the automation account with following permissions:
     - Reader on the scope of the specified management group (default alz)
     - Virtual machine contributor on the scope of the specified management group (default alz)
