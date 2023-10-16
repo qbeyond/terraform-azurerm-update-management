@@ -1,5 +1,5 @@
 variable "management_subscription_id" {
-  type = string
+  type        = string
   description = "Id of the management subscription."
 }
 
@@ -15,7 +15,7 @@ variable "automation_account" {
 }
 
 variable "management_group_id" {
-  type = string
+  type        = string
   description = "ID of the management group that scopes the update management."
-  default = "alz"
+  default     = "alz"
 }
