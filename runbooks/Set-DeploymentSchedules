@@ -99,12 +99,19 @@ Write-Output "Following severity group tags were found $severityGroups"
 Set-AzContext -Subscription $managementSubscriptionId 
 
 Write-Output "Starting creating/ updating severity groups."
+$syntaxRegex = '(0[1-9]|[1-9][0-9])-(first|second|third|forth|last)-(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]\d|2[0-3])([0-5]\d)-([XCSUFEDTG]+)-(reboot|neverreboot|alwaysreboot|onlyreboot)'
+
 foreach ($severityGroup in $severityGroups) {
     $splitSeverityGroup = $severityGroup -split "-"
 
     if ($splitSeverityGroup[0].Length -eq 4) {
         Write-Warning "$($severityGroup) is an emergency patch group. Create update configuration manually with the tag Severity Group Emergency."
         continue
+    }
+
+    if($severityGroup -notmatch $syntaxRegex) {
+        Write-Warning "$($severityGroup) does not match the syntax. Please review the concept and correct the tag."
+        continue 
     }
 
     $dayInterval = [int]$splitSeverityGroup[0]
