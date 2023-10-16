@@ -1,5 +1,5 @@
 resource "time_static" "tomorrow_7am" {
-  rfc3339 = timeadd(formatdate("YYYY-MM-DD'T'05:00:00+02:00Z", timestamp()), "24h")
+  rfc3339 = timeadd(formatdate("YYYY-MM-DD'T'05:00:00Z", timestamp()), "24h")
   triggers = {
     aac_name  = var.automation_account.name
     aac_id    = var.automation_account.id
