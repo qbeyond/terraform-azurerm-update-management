@@ -1,4 +1,6 @@
-resource "time_static" "tomorrow_7am" {
+resource "time_static" "schedule_start_tomorrow_7am" {
+# The start_time of schedule needs to be in the future
+# Use time static to avoid recreating schedule on any invocation
   rfc3339 = timeadd(formatdate("YYYY-MM-DD'T'05:00:00Z", timestamp()), "24h")
   triggers = {
     aac_name  = var.automation_account.name
