@@ -7,7 +7,7 @@ resource "time_static" "tomorrow_7am" {
     frequency = "Day"
     interval  = 1
     timezone  = "Europe/Berlin"
-    runbook   = file("${path.root}/runbooks/Set-DeploymentSchedules.ps1")
+    runbook   = file("${path.module}/runbooks/Set-DeploymentSchedules.ps1")
   }
 }
 
@@ -20,10 +20,6 @@ resource "azurerm_automation_schedule" "every_12h_7am" {
   timezone                = time_static.tomorrow_7am.triggers.timezone
   start_time              = time_static.tomorrow_7am.rfc3339
   description             = "This schedule runs every twelve hours staring 7 AM."
-  
-  lifecycle {
-    ignore_changes = [ "tags" ]
-  }
 }
 
 resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
@@ -38,10 +34,6 @@ resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
     managementsubscriptionid    = var.management_subscription_id
     managementgroupid           = var.management_group_id
   }
-
-  lifecycle {
-  ignore_changes = [ "tags" ]
-  }
 }
 
 resource "azurerm_automation_runbook" "set_deployment_schedules" {
@@ -54,7 +46,7 @@ resource "azurerm_automation_runbook" "set_deployment_schedules" {
   description             = "This Script creates and updates update management deployment groups based on tags."
   runbook_type            = "PowerShell"
 
-  content = file("${path.root}/runbooks/Set-DeploymentSchedules.ps1")
+  content = file("${path.module}/runbooks/Set-DeploymentSchedules.ps1")
 
   lifecycle {
     ignore_changes = [
