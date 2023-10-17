@@ -1,17 +1,43 @@
-module "severity-severity-01-third-sunday-2200-reboot" {
-  source                                                      = "qbeyond/update-management/azurerm"
-  version                                                     = "1.0.0"
-  resource_group_name                                         = local.resource_group_name_automation_account
-  automation_account_name                                     = local.automation_account_name
-  severity_group_name                                         = "01-third-sunday-2200-reboot"
-  scheduleInfo_frequency                                      = "Month"
-  scheduleInfo_interval                                       = "1"
-  scheduleInfo_startTime_hour                                 = "22:00"
-  updateConfiguration_operatingsystem                         = "Windows"
-  updateConfiguration_azureQueries_tags_severitygrouptagname  = "Severity Group Monthly"
-  updateConfiguration_azureQueries_scope                      = data.azurerm_subscriptions.available.subscriptions.*.id
-  updateConfiguration_windows_includedUpdateClassifications   = "Critical, Security, UpdateRollup, FeaturePack, ServicePack, Definition, Tools, Updates"
-  updateConfiguration_rebootSetting                           = "IfRequired"
-  scheduleInfo_advancedSchedule_monthlyOccurrences_day        = "Sunday"
-  scheduleInfo_advancedSchedule_monthlyOccurrences_occurrence = 3
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "West Europe"
+}
+
+resource "azurerm_automation_account" "example" {
+  name                = "example-account"
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+  sku_name            = "Basic"
+}
+
+resource "azurerm_automation_module" "az_accounts" {
+  name                    = "Az.Accounts"
+  resource_group_name     = azurerm_resource_group.example.name
+  automation_account_name = azurerm_automation_account.example.name
+
+  module_link {
+    uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.accounts.2.12.1.nupkg"
+  }
+}
+
+resource "azurerm_automation_module" "az_resourcegraph" {
+  name                    = "Az.Resourcegraph"
+  resource_group_name     = azurerm_resource_group.example.name
+  automation_account_name = azurerm_automation_account.example.name
+  module_link {
+    uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.resourcegraph.0.13.0.nupkg"
+  }
+  depends_on = [azurerm_automation_module.az_accounts]
+}
+
+module "update_management" {
+  source                     = "../.."
+  automation_account         = azurerm_automation_account.example
+  management_subscription_id = "abcdef01-2345-6789-0abc-def012345678"
+  management_group_id        = "sandbox"
+  az_resourcegraph_module    = azurerm_automation_module.az_resourcegraph
 }
