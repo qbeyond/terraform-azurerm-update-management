@@ -49,49 +49,43 @@ $resourceGraphQuery = @'
 resources
 |  where  ['tags'] contains "Severity Group Monthly" and tags['Update allowed'] == 'yes'
 |  where  ['type'] == "microsoft.compute/virtualmachines"
-|  project ['tags'].["Severity Group Monthly"]
+|  project group=tostring(['tags'].["Severity Group Monthly"])
+|  distinct group
 '@
 
 $resourceGraphQuerySubscriptions = @'
 resourcecontainers
 | where type == "microsoft.resources/subscriptions"
-| where properties.managementGroupAncestorsChain contains "alz" and properties.state == "Enabled"
-| project subscriptionId
+| where properties.state == "Enabled"
+| project subscriptionId=strcat("/subscriptions/",subscriptionId)
 '@
 
 Connect-AzAccount -Identity
 
 Write-Output "Starting to query Microsoft Resource Graph for subscriptions..."
 $subscriptions = @()
-try{
+try {
     do {
         $previousResult = Search-AzGraph -Query $resourceGraphQuerySubscriptions -ManagementGroup $managementGroupId -SkipToken $previousResult.SkipToken
         $subscriptions += $previousResult.subscriptionId
     } until (-not $previousResult.SkipToken)
     Write-Output "Finished to query Microsoft Resource Graph..."
-}catch{
-    Write-Error "The script execution failed with Error `n`t $($($_.Exception).Message)"
 }
-
-$subscriptionResourceIDs = $subscriptions | ForEach-Object {
-    "/subscriptions/$_"
+catch {
+    Write-Error "The script execution failed with Error `n`t $($($_.Exception).Message)"
 }
 
 Write-Output "Starting to query Microsoft Resource Graph for tags..."
-$result = @()
-try{
+$severityGroups = @()
+try {
     do {
         $previousResult = Search-AzGraph -Query $resourceGraphQuery -ManagementGroup $managementGroupId -SkipToken $previousResult.SkipToken
-        $result += $previousResult
+        $severityGroups += $previousResult.group
     } until (-not $previousResult.SkipToken)
     Write-Output "Finished to query Microsoft Resource Graph..."
-}catch{
-    Write-Error "The script execution failed with Error `n`t $($($_.Exception).Message)"
 }
-
-$severityGroups = New-Object System.Collections.Generic.HashSet[string]
-$result | ForEach-Object {
-    $severityGroups.add($_."tags_Severity Group Monthly")
+catch {
+    Write-Error "The script execution failed with Error `n`t $($($_.Exception).Message)"
 }
 
 Write-Output "Following severity group tags were found $severityGroups"
@@ -109,7 +103,7 @@ foreach ($severityGroup in $severityGroups) {
         continue
     }
 
-    if($severityGroup -notmatch $syntaxRegex) {
+    if ($severityGroup -notmatch $syntaxRegex) {
         Write-Warning "$($severityGroup) does not match the syntax. Please review the concept and correct the tag."
         continue 
     }
@@ -121,24 +115,25 @@ foreach ($severityGroup in $severityGroups) {
     $rebootSetting = $rebootOptions[$splitSeverityGroup[5]]
     $queryTags = @{
         "Severity Group Monthly" = "$($severityGroup)"
-        "Update allowed" = "yes"
+        "Update allowed"         = "yes"
     }
-    $updateClassification = $splitSeverityGroup[4].ToCharArray() |ForEach-Object {
+    $updateClassification = $splitSeverityGroup[4].ToCharArray() | ForEach-Object {
         $updateOptions["$_"]
     }
     $duration = New-TimeSpan -Hours 4
     try {
         $schedule = New-AzAutomationSchedule `
-        -AutomationAccountName $automationAccountName `
-        -ResourceGroupName $automationResourceGroupName `
-        -Name $severityGroup `
-        -MonthInterval $dayInterval `
-        -DayOfWeek $weekday `
-        -DayOfWeekOccurrence $weekdayRepetition `
-        -Description "Schedule for update deployment group $($severityGroup)" `
-        -ForUpdateConfiguration `
-        -StartTime $startTime `
-        -TimeZone "W. Europe Standard Time" `
+            -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $automationResourceGroupName `
+            -Name $severityGroup `
+            -MonthInterval $dayInterval `
+            -DayOfWeek $weekday `
+            -DayOfWeekOccurrence $weekdayRepetition `
+            -Description "Schedule for update deployment group $($severityGroup)" `
+            -ForUpdateConfiguration `
+            -StartTime $startTime `
+            -TimeZone "W. Europe Standard Time" `
+    
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create schedule for $severityGroup." -ErrorAction Continue 
@@ -147,31 +142,33 @@ foreach ($severityGroup in $severityGroups) {
 
     try {
         $azureQuery = New-AzAutomationUpdateManagementAzureQuery `
-        -ResourceGroupName $automationResourceGroupName `
-        -AutomationAccountName $automationAccountName  `
-        -Scope $subscriptionResourceIDs `
-        -Tag $queryTags `
+            -ResourceGroupName $automationResourceGroupName `
+            -AutomationAccountName $automationAccountName  `
+            -Scope $subscriptionResourceIDs `
+            -Tag $queryTags `
+    
     }
-   catch {
+    catch {
         
         continue
-   }
+    }
 
-   try {
-    New-AzAutomationSoftwareUpdateConfiguration `
-        -AutomationAccountName $automationAccountName `
-        -ResourceGroupName $automationResourceGroupName `
-        -Schedule $schedule `
-        -Windows `
-        -IncludedUpdateClassification $updateClassification `
-        -AzureQuery $azureQuery `
-        -Duration $duration `
-        -RebootSetting $rebootSetting `
-   }
-   catch {
-       Write-Error -Exception ($_.Exception) -Message "Could not create Update configuration for $severityGroup" -ErrorAction Continue
-       continue
-   }
+    try {
+        New-AzAutomationSoftwareUpdateConfiguration `
+            -AutomationAccountName $automationAccountName `
+            -ResourceGroupName $automationResourceGroupName `
+            -Schedule $schedule `
+            -Windows `
+            -IncludedUpdateClassification $updateClassification `
+            -AzureQuery $azureQuery `
+            -Duration $duration `
+            -RebootSetting $rebootSetting `
+   
+    }
+    catch {
+        Write-Error -Exception ($_.Exception) -Message "Could not create Update configuration for $severityGroup" -ErrorAction Continue
+        continue
+    }
 
-   Write-Output "Created $severityGroup successfully."
+    Write-Output "Created $severityGroup successfully."
 }
