@@ -24,6 +24,7 @@ resource "azurerm_automation_schedule" "every_12h_starting_7am" {
   description             = "This schedule runs every twelve hours staring 7 AM."
 }
 
+# Will allways be recreated to fix: https://github.com/hashicorp/terraform-provider-azurerm/issues/17970
 resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
   resource_group_name     = var.automation_account.resource_group_name
   automation_account_name = var.automation_account.name
@@ -35,6 +36,10 @@ resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
     automationresourcegroupname = var.automation_account.resource_group_name
     managementsubscriptionid    = var.management_subscription_id
     managementgroupid           = var.management_group_id
+  }
+
+  lifecycle {
+    replace_triggered_by = [azurerm_automation_runbook.set_deployment_schedules]
   }
 }
 
