@@ -93,8 +93,8 @@ Write-Output "Following severity group tags were found $severityGroups"
 Set-AzContext -Subscription $managementSubscriptionId 
 
 Write-Output "Starting creating/ updating severity groups."
-$syntaxRegex = '^(0[1-9]|[1-9][0-9])-(first|second|third|forth|last)-(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]\d|2[0-3])([0-5]\d)-([XCSUFEDTG]+)-(reboot|neverreboot|alwaysreboot|onlyreboot)$'
-
+$syntaxRegex = '^(0[1-9]|[1-9][0-9])-(first|second|third|fourth|last)-(monday|tuesday|wednesday|thursday|friday|saturday|sunday)-([01]\d|2[0-3])([0-5]\d)-([XCSUFEDTG]+)-(reboot|neverreboot|alwaysreboot|onlyreboot)$'
+$errorCounter = 0
 foreach ($severityGroup in $severityGroups) {
     $splitSeverityGroup = $severityGroup -split "-"
 
@@ -137,6 +137,7 @@ foreach ($severityGroup in $severityGroups) {
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create schedule for $severityGroup." -ErrorAction Continue 
+        $errorCounter +=1
         continue
     }
 
@@ -144,12 +145,13 @@ foreach ($severityGroup in $severityGroups) {
         $azureQuery = New-AzAutomationUpdateManagementAzureQuery `
             -ResourceGroupName $automationResourceGroupName `
             -AutomationAccountName $automationAccountName  `
-            -Scope $subscriptionResourceIDs `
+            -Scope $subscriptions `
             -Tag $queryTags `
     
     }
     catch {
-        
+        Write-Error -Exception ($_.Exception) -Message "Could not create azure for $severityGroup." -ErrorAction Continue 
+        $errorCounter +=1
         continue
     }
 
@@ -167,8 +169,12 @@ foreach ($severityGroup in $severityGroups) {
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create Update configuration for $severityGroup" -ErrorAction Continue
+        $errorCounter +=1
         continue
     }
 
     Write-Output "Created $severityGroup successfully."
 }
+if ($errorCounter -gt 0) {
+    Write-Error -Message "There was an error inside the loop. Please check error messages in detailed job logs."
+} 
