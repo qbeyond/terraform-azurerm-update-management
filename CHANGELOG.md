@@ -6,7 +6,7 @@ and this module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
  
 ## [Unreleased}
 
-## [2.0.0] - 2024-02-19
+## [2.0.2] - 2024-02-19
 
 - Fixed wrong variable name in azure query creation
 - fixed typo in regex
