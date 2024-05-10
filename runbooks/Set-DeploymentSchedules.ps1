@@ -111,14 +111,15 @@ foreach ($severityGroup in $severityGroups) {
     $dayInterval = [int]$splitSeverityGroup[0]
     $weekdayRepetition = $splitSeverityGroup[1]
     $weekday = $splitSeverityGroup[2]
-    $plannedTime = (get-date ($splitSeverityGroup[3].Substring(0, 2) + ":" + $splitSeverityGroup[3].Substring(2, 2))).AddDays(1)
-    if ($plannedTime -lt (get-date)) {
+    $plannedTime = get-date ($splitSeverityGroup[3].Substring(0, 2) + ":" + $splitSeverityGroup[3].Substring(2, 2))
+    if ($plannedTime -lt (get-date).AddHours(2)) {
         $startTime = $plannedTime.AddDays(1)
     }
     else {
         $startTime = $plannedTime
     }
-
+    
+    Write-Output "StartTime of $severityGroup is $startTime"     
     $rebootSetting = $rebootOptions[$splitSeverityGroup[5]]
     $queryTags = @{
         "Severity Group Monthly" = "$($severityGroup)"
