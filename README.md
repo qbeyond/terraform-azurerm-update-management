@@ -82,31 +82,32 @@ module "update_management" {
 
 No outputs.
 
-## Resource types
+      ## Resource types
 
-| Type | Used |
-|------|-------|
-| [azurerm_automation_job_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | 1 |
-| [azurerm_automation_runbook](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | 1 |
-| [azurerm_automation_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | 1 |
-| [time_static](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | 1 |
+      | Type | Used |
+      |------|-------|
+        | [azurerm_automation_job_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | 1 |
+        | [azurerm_automation_runbook](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | 1 |
+        | [azurerm_automation_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | 1 |
+        | [time_static](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | 1 |
 
-**`Used` only includes resource blocks.** `for_each` and `count` meta arguments, as well as resource blocks of modules are not considered.
-
+      **`Used` only includes resource blocks.** `for_each` and `count` meta arguments, as well as resource blocks of modules are not considered.
+    
 ## Modules
 
 No modules.
 
-## Resources by Files
+        ## Resources by Files
 
-### main.tf
+            ### main.tf
 
-| Name | Type |
-|------|------|
-| [azurerm_automation_job_schedule.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | resource |
-| [azurerm_automation_runbook.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | resource |
-| [azurerm_automation_schedule.every_12h_starting_7am](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | resource |
-| [time_static.schedule_start_tomorrow_7am](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
+            | Name | Type |
+            |------|------|
+                  | [azurerm_automation_job_schedule.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | resource |
+                  | [azurerm_automation_runbook.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | resource |
+                  | [azurerm_automation_schedule.every_12h_starting_7am](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | resource |
+                  | [time_static.schedule_start_tomorrow_7am](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
+    
 <!-- END_TF_DOCS -->
 
 # Contribute
