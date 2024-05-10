@@ -6,7 +6,15 @@ and this module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
  
 ## [Unreleased]
 
+## [2.0.3] - 2024-05-10
+
+### Fixed
+
+- Fixed issue that all schedules were created with a start date after the planned date
+
 ## [2.0.2] - 2024-02-19
+
+### Fixed
 
 - Fixed wrong variable name in azure query creation
 - fixed typo in regex

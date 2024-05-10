@@ -111,7 +111,14 @@ foreach ($severityGroup in $severityGroups) {
     $dayInterval = [int]$splitSeverityGroup[0]
     $weekdayRepetition = $splitSeverityGroup[1]
     $weekday = $splitSeverityGroup[2]
-    $startTime = (get-date ($splitSeverityGroup[3].Substring(0, 2) + ":" + $splitSeverityGroup[3].Substring(2, 2))).AddDays(1)
+    $plannedTime = (get-date ($splitSeverityGroup[3].Substring(0, 2) + ":" + $splitSeverityGroup[3].Substring(2, 2))).AddDays(1)
+    if ($plannedTime -lt (get-date)) {
+        $startTime = $plannedTime.AddDays(1)
+    }
+    else {
+        $startTime = $plannedTime
+    }
+
     $rebootSetting = $rebootOptions[$splitSeverityGroup[5]]
     $queryTags = @{
         "Severity Group Monthly" = "$($severityGroup)"
@@ -137,7 +144,7 @@ foreach ($severityGroup in $severityGroups) {
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create schedule for $severityGroup." -ErrorAction Continue 
-        $errorCounter +=1
+        $errorCounter += 1
         continue
     }
 
@@ -151,7 +158,7 @@ foreach ($severityGroup in $severityGroups) {
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create azure for $severityGroup." -ErrorAction Continue 
-        $errorCounter +=1
+        $errorCounter += 1
         continue
     }
 
@@ -169,7 +176,7 @@ foreach ($severityGroup in $severityGroups) {
     }
     catch {
         Write-Error -Exception ($_.Exception) -Message "Could not create Update configuration for $severityGroup" -ErrorAction Continue
-        $errorCounter +=1
+        $errorCounter += 1
         continue
     }
 
