@@ -1,5 +1,6 @@
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
 }
 
 resource "azurerm_resource_group" "example" {
@@ -23,21 +24,18 @@ resource "azurerm_automation_module" "az_accounts" {
     uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.accounts.2.12.1.nupkg"
   }
 }
-
-resource "azurerm_automation_module" "az_resourcegraph" {
-  name                    = "Az.Resourcegraph"
-  resource_group_name     = azurerm_resource_group.example.name
-  automation_account_name = azurerm_automation_account.example.name
-  module_link {
-    uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.resourcegraph.0.13.0.nupkg"
-  }
-  depends_on = [azurerm_automation_module.az_accounts]
+locals {
+  management_group_id    = "alz"
+  policy_assignment_name = "QBY-Deploy-Update-Mgmt"
 }
 
 module "update_management" {
-  source                     = "../.."
-  automation_account         = azurerm_automation_account.example
-  management_subscription_id = "abcdef01-2345-6789-0abc-def012345678"
-  management_group_id        = "sandbox"
-  az_resourcegraph_module    = azurerm_automation_module.az_resourcegraph
+  source                      = "../.."
+  resource_group              = azurerm_resource_group.example
+  automation_account          = azurerm_automation_account.example
+  management_group_id         = local.management_group_id
+  policy_assignment_id        = "/providers/microsoft.management/managementgroups/${local.management_group_id}/providers/microsoft.authorization/policyassignments/${local.policy_assignment_name}"
+  tags                        = {}
+  policy_reference_id_linux   = "Configure update management for Linux virtual machines with a given tag using Azure Update Manager"
+  policy_reference_id_windows = "Configure update management for Windows virtual machines with a given tag using Azure Update Manager"
 }
