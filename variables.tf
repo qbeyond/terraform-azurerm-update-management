@@ -1,6 +1,9 @@
-variable "management_subscription_id" {
-  type        = string
-  description = "Id of the management subscription."
+variable "resource_group" {
+  type = object({
+    name     = string
+    location = string
+  })
+  description = "Resource group used for the deployment."
 }
 
 variable "automation_account" {
@@ -17,19 +20,24 @@ variable "automation_account" {
 variable "management_group_id" {
   type        = string
   description = "ID of the management group that scopes the update management."
-  default     = "alz"
 }
 
-variable "az_resourcegraph_module" {
-  type = object({
-    name = string
-    module_link = list(object({
-      uri = string
-    }))
-  })
-  description = "Required module Az.resourcegraph that is needed to run queries in the runbook."
-  validation {
-    condition =  endswith(var.az_resourcegraph_module.module_link[0].uri, "az.resourcegraph.0.13.0.nupkg")
-    error_message = "az.resourcegraph in version 0.13.0 is required"
-  }
+variable "policy_assignment_id" {
+  type        = string
+  description = "ID of the policy assignment to remediate."
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "A mapping of tags to add to the resources created in this module"
+}
+
+variable "policy_reference_id_linux" {
+  type        = string
+  description = "ID of Policy reference for Linux."
+}
+
+variable "policy_reference_id_windows" {
+  type        = string
+  description = "ID of Policy reference for Windows."
 }
