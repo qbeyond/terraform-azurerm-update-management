@@ -21,6 +21,7 @@ It's very easy to use!
 ```hcl
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
 }
 
 resource "azurerm_resource_group" "example" {
@@ -44,23 +45,20 @@ resource "azurerm_automation_module" "az_accounts" {
     uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.accounts.2.12.1.nupkg"
   }
 }
-
-resource "azurerm_automation_module" "az_resourcegraph" {
-  name                    = "Az.Resourcegraph"
-  resource_group_name     = azurerm_resource_group.example.name
-  automation_account_name = azurerm_automation_account.example.name
-  module_link {
-    uri = "https://devopsgallerystorage.blob.core.windows.net:443/packages/az.resourcegraph.0.13.0.nupkg"
-  }
-  depends_on = [azurerm_automation_module.az_accounts]
+locals {
+  management_group_id    = "alz"
+  policy_assignment_name = "QBY-Deploy-Update-Mgmt"
 }
 
 module "update_management" {
-  source                     = "../.."
-  automation_account         = azurerm_automation_account.example
-  management_subscription_id = "abcdef01-2345-6789-0abc-def012345678"
-  management_group_id        = "sandbox"
-  az_resourcegraph_module    = azurerm_automation_module.az_resourcegraph
+  source                      = "../.."
+  resource_group              = azurerm_resource_group.example
+  automation_account          = azurerm_automation_account.example
+  management_group_id         = local.management_group_id
+  policy_assignment_id        = "/providers/microsoft.management/managementgroups/${local.management_group_id}/providers/microsoft.authorization/policyassignments/${local.policy_assignment_name}"
+  tags                        = {}
+  policy_reference_id_linux   = "Configure update management for Linux virtual machines with a given tag using Azure Update Manager"
+  policy_reference_id_windows = "Configure update management for Windows virtual machines with a given tag using Azure Update Manager"
 }
 ```
 
@@ -74,10 +72,13 @@ module "update_management" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_automation_account"></a> [automation\_account](#input\_automation\_account) | Automation account where the update management will be deployed. | <pre>object({<br>    name                = string<br>    id                  = string<br>    resource_group_name = string<br>    location            = string<br>  })</pre> | n/a | yes |
-| <a name="input_az_resourcegraph_module"></a> [az\_resourcegraph\_module](#input\_az\_resourcegraph\_module) | Required module Az.resourcegraph that is needed to run queries in the runbook. | <pre>object({<br>    name = string<br>    module_link = list(object({<br>      uri = string<br>    }))<br>  })</pre> | n/a | yes |
-| <a name="input_management_subscription_id"></a> [management\_subscription\_id](#input\_management\_subscription\_id) | Id of the management subscription. | `string` | n/a | yes |
-| <a name="input_management_group_id"></a> [management\_group\_id](#input\_management\_group\_id) | ID of the management group that scopes the update management. | `string` | `"alz"` | no |
+| <a name="input_automation_account"></a> [automation\_account](#input\_automation\_account) | Automation account where the update management will be deployed. | <pre>object({<br/>    name                = string<br/>    id                  = string<br/>    resource_group_name = string<br/>    location            = string<br/>  })</pre> | n/a | yes |
+| <a name="input_management_group_id"></a> [management\_group\_id](#input\_management\_group\_id) | ID of the management group that scopes the update management. | `string` | n/a | yes |
+| <a name="input_policy_assignment_id"></a> [policy\_assignment\_id](#input\_policy\_assignment\_id) | ID of the policy assignment to remediate. | `string` | n/a | yes |
+| <a name="input_policy_reference_id_linux"></a> [policy\_reference\_id\_linux](#input\_policy\_reference\_id\_linux) | ID of Policy reference for Linux. | `string` | n/a | yes |
+| <a name="input_policy_reference_id_windows"></a> [policy\_reference\_id\_windows](#input\_policy\_reference\_id\_windows) | ID of Policy reference for Windows. | `string` | n/a | yes |
+| <a name="input_resource_group"></a> [resource\_group](#input\_resource\_group) | Resource group used for the deployment. | <pre>object({<br/>    name     = string<br/>    location = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to add to the resources created in this module | `map(string)` | n/a | yes |
 ## Outputs
 
 No outputs.
@@ -89,6 +90,7 @@ No outputs.
         | [azurerm_automation_job_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | 1 |
         | [azurerm_automation_runbook](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | 1 |
         | [azurerm_automation_schedule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | 1 |
+        | [azurerm_maintenance_configuration](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/maintenance_configuration) | 1 |
         | [time_static](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | 1 |
 
       **`Used` only includes resource blocks.** `for_each` and `count` meta arguments, as well as resource blocks of modules are not considered.
@@ -103,10 +105,11 @@ No modules.
 
             | Name | Type |
             |------|------|
-                  | [azurerm_automation_job_schedule.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | resource |
-                  | [azurerm_automation_runbook.set_deployment_schedules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | resource |
-                  | [azurerm_automation_schedule.every_12h_starting_7am](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | resource |
-                  | [time_static.schedule_start_tomorrow_7am](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
+                  | [azurerm_automation_job_schedule.remediate_update_management](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_job_schedule) | resource |
+                  | [azurerm_automation_runbook.remediate_update_management](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_runbook) | resource |
+                  | [azurerm_automation_schedule.twice_daily](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/automation_schedule) | resource |
+                  | [azurerm_maintenance_configuration.no_maintenance](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/maintenance_configuration) | resource |
+                  | [time_static.start_12am_cest](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
     
 <!-- END_TF_DOCS -->
 
