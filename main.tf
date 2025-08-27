@@ -1,65 +1,87 @@
-resource "time_static" "schedule_start_tomorrow_7am" {
-# The start_time of schedule needs to be in the future
-# Use time static to avoid recreating schedule on any invocation
-  rfc3339 = timeadd(formatdate("YYYY-MM-DD'T'05:00:00Z", timestamp()), "24h")
+resource "time_static" "start_12am_cest" {
+  # The start_time of schedule needs to be in the future
+  # Use time static to avoid recreating schedule on any invocation
+  rfc3339 = timeadd(formatdate("YYYY-MM-DD'T'22:00:00Z", timestamp()), "24h")
   triggers = {
     aac_name  = var.automation_account.name
     aac_id    = var.automation_account.id
-    rg_name   = var.automation_account.resource_group_name
-    frequency = "Day"
-    interval  = 1
+    rg_name   = var.resource_group.name
+    frequency = "Hour"
+    interval  = 12
     timezone  = "Europe/Berlin"
-    runbook   = file("${path.module}/runbooks/Set-DeploymentSchedules.ps1")
+    runbook   = file("${path.module}/runbooks/Remediate-UpdateManagement.ps1")
   }
 }
 
-resource "azurerm_automation_schedule" "every_12h_starting_7am" {
-  name                    = "Every 12 Hours starting 7AM"
-  resource_group_name     = time_static.schedule_start_tomorrow_7am.triggers.rg_name
-  automation_account_name = time_static.schedule_start_tomorrow_7am.triggers.aac_name
-  frequency               = time_static.schedule_start_tomorrow_7am.triggers.frequency
-  interval                = time_static.schedule_start_tomorrow_7am.triggers.interval
-  timezone                = time_static.schedule_start_tomorrow_7am.triggers.timezone
-  start_time              = time_static.schedule_start_tomorrow_7am.rfc3339
-  description             = "This schedule runs every twelve hours staring 7 AM."
+resource "azurerm_automation_runbook" "remediate_update_management" {
+  name                    = "Remediate-UpdateManagement"
+  location                = var.resource_group.location
+  resource_group_name     = var.resource_group.name
+  automation_account_name = var.automation_account.name
+  log_verbose             = "true"
+  log_progress            = "true"
+  description             = "This runbook starts update management policy remediations based on policy assignments and references."
+  runbook_type            = "PowerShell"
+  content                 = file("${path.module}/runbooks/Remediate-UpdateManagement.ps1")
+  tags                    = var.tags
 }
 
-# Will allways be recreated to fix: https://github.com/hashicorp/terraform-provider-azurerm/issues/17970
-resource "azurerm_automation_job_schedule" "set_deployment_schedules" {
-  resource_group_name     = var.automation_account.resource_group_name
+resource "azurerm_automation_schedule" "twice_daily" {
+  name                    = "aas-Remediate-UpdateManagement-Twice-Daily"
+  resource_group_name     = var.resource_group.name
   automation_account_name = var.automation_account.name
-  schedule_name           = azurerm_automation_schedule.every_12h_starting_7am.name
-  runbook_name            = azurerm_automation_runbook.set_deployment_schedules.name
+  frequency               = time_static.start_12am_cest.triggers.frequency
+  interval                = time_static.start_12am_cest.triggers.interval
+  timezone                = time_static.start_12am_cest.triggers.timezone
+  start_time              = time_static.start_12am_cest.rfc3339
+}
+
+resource "azurerm_automation_job_schedule" "remediate_update_management" {
+  resource_group_name     = var.resource_group.name
+  automation_account_name = var.automation_account.name
+  schedule_name           = azurerm_automation_schedule.twice_daily.name
+  runbook_name            = azurerm_automation_runbook.remediate_update_management.name
 
   parameters = {
-    automationaccountname       = var.automation_account.name
-    automationresourcegroupname = var.automation_account.resource_group_name
-    managementsubscriptionid    = var.management_subscription_id
-    managementgroupid           = var.management_group_id
+    managementgroupid        = var.management_group_id
+    policyassignmentid       = var.policy_assignment_id
+    policyreferenceidlinux   = var.policy_reference_id_linux
+    policyreferenceidwindows = var.policy_reference_id_windows
   }
 
   lifecycle {
-    replace_triggered_by = [azurerm_automation_runbook.set_deployment_schedules]
+    replace_triggered_by = [azurerm_automation_runbook.remediate_update_management]
   }
 }
 
-resource "azurerm_automation_runbook" "set_deployment_schedules" {
-  name                    = "Set-DeploymentSchedules"
-  location                = var.automation_account.location
-  resource_group_name     = var.automation_account.resource_group_name
-  automation_account_name = var.automation_account.name
-  log_verbose             = "false" #prevent https://learn.microsoft.com/en-us/azure/automation/troubleshoot/runbooks#output-stream-greater-1mb
-  log_progress            = "false" #prevent https://learn.microsoft.com/en-us/azure/automation/troubleshoot/runbooks#output-stream-greater-1mb
-  description             = "This Script creates and updates update management deployment groups based on tags."
-  runbook_type            = "PowerShell"
+resource "azurerm_maintenance_configuration" "no_maintenance" {
+  name                     = "NoMaintenance"
+  resource_group_name      = var.resource_group.name
+  location                 = var.resource_group.location
+  scope                    = "InGuestPatch"
+  in_guest_user_patch_mode = "User"
 
-  content = file("${path.module}/runbooks/Set-DeploymentSchedules.ps1")
+  window {
+    start_date_time      = formatdate("YYYY-MM-DD hh:mm", timestamp())
+    expiration_date_time = formatdate("YYYY-MM-DD hh:mm", timeadd(timestamp(), "150m"))
+    duration             = "02:00"
+    time_zone            = "W. Europe Standard Time"
+    recur_every          = "Day"
+  }
+
+  install_patches {
+    linux {
+      classifications_to_include = ["Other"]
+    }
+    reboot = "Never"
+  }
+  tags = var.tags
 
   lifecycle {
     ignore_changes = [
-      tags
+      install_patches[0].reboot,
+      window[0].start_date_time,
+      window[0].expiration_date_time
     ]
   }
 }
-
-

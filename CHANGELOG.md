@@ -6,6 +6,15 @@ and this module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
  
 ## [Unreleased]
 
+## [3.0.0] - 2025-08-26
+
+### Added
+- added maintenance configuration "NoMaintenance" 
+- runbook that remediates the main update management policies twice a day
+
+### Changed 
+- main functionality of the entire module 
+
 ## [2.0.3] - 2024-05-10
 
 ### Fixed
