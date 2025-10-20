@@ -6,6 +6,11 @@ and this module adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
  
 ## [Unreleased]
 
+## [3.0.1] - 2025-10-20
+
+### Fixed 
+- Ignore all changes on NoMaintenance maintenance configuration to prevent issues with start/endtime on resource updates.
+
 ## [3.0.0] - 2025-08-26
 
 ### Added
