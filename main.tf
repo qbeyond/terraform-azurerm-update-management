@@ -78,10 +78,6 @@ resource "azurerm_maintenance_configuration" "no_maintenance" {
   tags = var.tags
 
   lifecycle {
-    ignore_changes = [
-      install_patches[0].reboot,
-      window[0].start_date_time,
-      window[0].expiration_date_time
-    ]
+    ignore_changes = all
   }
 }
